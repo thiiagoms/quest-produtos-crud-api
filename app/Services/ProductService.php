@@ -60,18 +60,11 @@ final class ProductService
      * Update Product
      *
      * @param integer $productId
-     * @param array $data
+     * @param array $productData
      * @return array
      */
-    public function updateProduct(int $productId, array $data): array
+    public function updateProduct(int $productId, array $productData): array
     {
-        $productData = [
-            'name'        => $data['productName'],
-            'price'       => $data['productPrice'],
-            'description' => $data['productDescription'],
-            'img_path'    => $data['productImage']
-        ];
-
         $result = $this->findProduct($productId);
 
         $result->fill($productData)->save();

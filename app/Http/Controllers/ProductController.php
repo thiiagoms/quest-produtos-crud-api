@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductService;
-use Illuminate\Http\Request;
 
 /**
  * Product Controller
@@ -104,7 +103,24 @@ final class ProductController extends Controller
      */
     public function update(ProductRequest $request, $productId)
     {
-        $result = $this->productService->updateProduct($productId, $request->except(['_token', '_method']));
+        $productImg = null;
+
+        if ($request->hasFile('productImage')) {
+            $productImg = $request->file('productImage')->getClientOriginalName();
+            $request->file('productImage')->move(public_path('products'), $productImg);
+        }
+
+        $productName  = strip_tags($request->productName);
+        $productPrice = filter_var($request->productPrice, FILTER_VALIDATE_FLOAT);
+        $productDescription = strip_tags($request->productDescription);
+
+        $result = $this->productService->updateProduct($productId, [
+            'name'        => $productName,
+            'price'       => $productPrice,
+            'description' => $productDescription,
+            'img_path'    => $productImg
+        ]);
+
         return to_route('product.index')->with(array_key_first($result), array_values($result)[0]);
     }
 
