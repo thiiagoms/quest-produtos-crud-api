@@ -16,9 +16,10 @@ interface ProductContract
     /**
      * Product list
      *
+     * @param null|int $perPage - Products per page
      * @return object
      */
-    public function productList(): object;
+    public function productList(?int $perPage): object;
 
     /**
      * Find product by id
