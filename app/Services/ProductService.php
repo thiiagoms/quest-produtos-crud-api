@@ -24,9 +24,11 @@ final class ProductService
      *
      * @return object
      */
-    public function listProducts(): object
+    public function listProducts(?int $perPage): object
     {
-        return $this->productContract->productList();
+        return is_null($perPage)
+            ? $this->productContract->productList(null)
+            : $this->productContract->productList($perPage);
     }
 
     /**

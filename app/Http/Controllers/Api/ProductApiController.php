@@ -1,21 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\ProductRequest;
+use App\Http\Controllers\Controller;
 use App\Services\ProductService;
+use Illuminate\Http\Request;
 
-/**
- * Product Controller
- *
- * @package App\Http\Controllers
- * @author  Thiago Silva <thiagom.devsec@gmail.com>
- * @version 1.0
- */
-final class ProductController extends Controller
+final class ProductApiController extends Controller
 {
     /**
-     * Init controller with service
+     * Init api Controller with service
      *
      * @param ProductService $productService
      */
@@ -30,26 +24,16 @@ final class ProductController extends Controller
      */
     public function index()
     {
-        return view('products.index', ['products' => $this->productService->listProducts(5)]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        return view('products.create');
+        return response()->json($this->productService->listProducts(null), 200);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\ProductRequest  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(ProductRequest $request)
+    public function store(Request $request)
     {
         $productImg = null;
 
@@ -58,9 +42,13 @@ final class ProductController extends Controller
             $request->file('productImage')->move(public_path('products'), $productImg);
         }
 
-        $productName  = strip_tags($request->productName);
-        $productPrice = filter_var($request->productPrice, FILTER_VALIDATE_FLOAT);
-        $productDescription = strip_tags($request->productDescription);
+        if (is_null($productImg)) {
+            $productImg = 'no_image.png';
+        }
+
+        $productName  = strip_tags($request->name);
+        $productPrice = filter_var($request->price, FILTER_VALIDATE_FLOAT);
+        $productDescription = strip_tags($request->description);
 
         $result = $this->productService->createProduct([
             'name'        => $productName,
@@ -69,7 +57,7 @@ final class ProductController extends Controller
             'img_path'    => $productImg
         ]);
 
-        return to_route('product.index')->with(array_key_first($result), array_values($result)[0]);
+        return response()->json($result, 201);
     }
 
     /**
@@ -80,34 +68,31 @@ final class ProductController extends Controller
      */
     public function show($id)
     {
-        return view('products.show', ['product' => $this->productService->findProduct($id)]);
-    }
+        $result = $this->productService->findProduct($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        return view('products.edit', ['product' => $this->productService->findProduct($id)]);
+        return !is_null($result)
+            ? response()->json($result, 200)
+            : response()->json(['message' => "Produto não encontrado"], 404);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int $productId
      * @return \Illuminate\Http\Response
      */
-    public function update(ProductRequest $request, $productId)
+    public function update(Request $request, $productId)
     {
         $productImg = null;
 
         if ($request->hasFile('productImage')) {
             $productImg = $request->file('productImage')->getClientOriginalName();
             $request->file('productImage')->move(public_path('products'), $productImg);
+        }
+
+        if (is_null($productImg)) {
+            $productImg = 'no_image.png';
         }
 
         $productName  = strip_tags($request->productName);
@@ -121,7 +106,7 @@ final class ProductController extends Controller
             'img_path'    => $productImg
         ]);
 
-        return to_route('product.index')->with(array_key_first($result), array_values($result)[0]);
+        return response()->json($result, 200);
     }
 
     /**
@@ -133,6 +118,6 @@ final class ProductController extends Controller
     public function destroy($id)
     {
         $result = $this->productService->deleteProduct($id);
-        return to_route('product.index')->with(array_key_first($result), array_values($result)[0]);
+        return response()->json($result, 204);
     }
 }

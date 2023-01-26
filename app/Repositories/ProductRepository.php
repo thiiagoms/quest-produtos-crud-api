@@ -28,9 +28,11 @@ final class ProductRepository extends Repository implements ProductContract
      *
      * @return object
      */
-    public function productList(): object
+    public function productList(?int $perPage): object
     {
-        return $this->model->simplePaginate(5);
+        return is_null($perPage)
+            ? $this->model->all()
+            : $this->model->simplePaginate($perPage);
     }
 
     /**
